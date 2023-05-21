@@ -1,0 +1,100 @@
+1)--Удалите всех студентов с неуказанной датой рождения
+DELETE FROM student_hobby
+WHERE student_id IN (SELECT id FROM student WHERE date_birth IS NULL);
+DELETE FROM student WHERE date_birth IS NULL;
+
+2)--Измените дату рождения всех студентов, с неуказанной датой рождения на 01-01-1999
+UPDATE student
+SET date_birth = '01-01-1999'
+WHERE date_birth is NULL;
+
+3)--Удалите из таблицы студента с номером зачётки 21
+DELETE FROM student_hobby
+WHERE student_id IN (SELECT id FROM student WHERE n_card = '21');
+DELETE FROM student WHERE n_card = '21';
+
+4)--Уменьшите риск хобби, которым занимается наибольшее количество человек
+UPDATE hobby
+SET risk = risk - 0.3
+WHERE id IN (
+SELECT hobby_id
+FROM student_hobby
+GROUP BY hobby_id
+ORDER BY COUNT(DISTINCT student_id) DESC
+LIMIT 1
+);
+
+5)--Добавьте всем студентам, которые занимаются хотя бы одним хобби 0.01 балл
+UPDATE student
+SET score = score + 0.01
+WHERE id IN (
+SELECT student_id FROM student_hobby WHERE date_finish IS NULL
+);
+
+6)--Удалите все завершенные хобби студентов
+DELETE FROM student_hobby WHERE date_finish IS NOT NULL;
+DELETE FROM hobby
+WHERE id IN(SELECT hobby_id FROM student_hobby WHERE date_finish IS NOT NULL);
+
+7)--Добавьте студенту с id 4 хобби с id 5. date_start - '15-11-2009, date_finish - null
+UPDATE student_hobby
+SET date_start = '11-15-2009', date_finish = null, hobby_id = 5
+WHERE student_id = 4;
+
+8)--напишите запрос, который удаляет самую раннюю из студентов_хобби запись, в случае, если студент делал перерыв в хобби (т.е. занимался одним и тем же несколько раз)
+DELETE FROM student_hobby sh1
+WHERE date_start =
+(SELECT MIN(date_start)
+FROM student_hobby sh2
+WHERE sh1.student_id = sh2.student_id
+AND sh1.hobby_id = sh2.hobby_id
+AND sh2.date_finish IS NOT NULL
+AND sh1.date_start > sh2.date_finish);
+
+
+9)--Поменяйте название хобби всем студентам, кто занимается футболом - на бальные танцы, а кто баскетболом - на вышивание крестиком.
+UPDATE hobby
+SET name =
+CASE name
+WHEN 'Футбол' THEN 'Бальные танцы'
+WHEN 'Баскетбол' THEN 'Вышивание крестиком'
+ELSE name
+END
+
+
+10)--Добавьте в таблицу хобби новое хобби с названием "Учёба"
+INSERT INTO hobby (id,name,risk) VALUES (9,'Учёба',0.00);
+
+11)--У всех студентов, средний балл которых меньше 3.2 поменяйте во всех хобби (если занимается чем-либо) и добавьте (если ничем не занимается), что студент занимается хобби из 10 задания
+UPDATE hobby
+SET name = 'Учеба'
+WHERE id IN (SELECT score from student WHERE score < 3.2);
+
+12)--Переведите всех студентов не 4 курса на курс выше
+
+UPDATE student
+SET n_group = substr(n_group::varchar,1,1) + 1::varchar
+WHERE substr(n_group::varchar,1,1) < 4::varchar;
+
+13)--Удалите из таблицы студента с номером зачётки 2
+DELETE FROM student_hobby
+WHERE student_id IN (SELECT id FROM student WHERE n_card = '2');
+DELETE FROM student WHERE n_card = '2';
+
+14)--Измените средний балл у всех студентов, которые занимаются хобби более 10 лет на 5.00
+UPDATE student
+SET score = 5.00
+WHERE id IN (
+SELECT student_id FROM student_hobby WHERE extract(year from age(date_finish, date_start)) > 10
+);
+
+15)--Удалите информацию о хобби, если студент начал им заниматься раньше, чем родился
+DELETE FROM student_hobby
+WHERE student_id IN ( SELECT id FROM student
+WHERE date_birth < (SELECT MIN(date_start) FROM student_hobby)
+);
+DELETE FROM hobby
+WHERE id NOT IN (
+SELECT hobby_id
+FROM student_hobby
+);
