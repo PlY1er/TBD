@@ -1,0 +1,34 @@
+— 1)Выведите номера групп и количество студентов, обучающихся в них
+
+SELECT n_group, COUNT(*) as students_count
+FROM student
+GROUP BY n_group;
+
+— 2)Выведите для каждой группы максимальный средний балл
+Select n_group, max(score)
+From student
+GROUP BY n_group;
+
+--3)Подсчитать количество студентов с каждой фамилией
+Select surname, COUNT(surname)
+from student
+GROUP BY surname;
+
+--4)Подсчитать студентов, которые родились в каждом году
+Select substr(date_birth::varchar,1,4) as year, COUNT(substr(date_birth::varchar,1,4))
+From student
+GROUP BY year
+ORDER BY year;
+--5)Для студентов каждого курса подсчитать средний балл
+SELECT DISTINCT substr(n_group::text,1,1) as course,AVG(score)
+from student
+GROUP BY course
+ORDER BY course;
+
+--6)Для студентов заданного курса вывести один номер группы с максимальным средним баллом
+Select n_group, AVG(score) AS avg_score
+from student
+WHERE CAST(n_group as text) LIKE '%2'
+GROUP BY n_group
+ORDER BY avg_score DESC
+LIMIT 1;
